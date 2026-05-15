@@ -11,6 +11,7 @@ Makefile
 .ninja_log
 
 # Compiled
+ch1/code/my_app
 *.o
 *.obj
 *.exe
