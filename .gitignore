@@ -12,6 +12,8 @@ Makefile
 
 # Compiled
 ch1/code/my_app
+ch3/code/app
+ch3/code/perf_test
 *.o
 *.obj
 *.exe
