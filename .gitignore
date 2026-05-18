@@ -14,6 +14,9 @@ Makefile
 ch1/code/my_app
 ch3/code/app
 ch3/code/perf_test
+ch4/code/matrix_demo
+ch4/code/matrix_demo_asan
+ch5/code/tensor_demo
 *.o
 *.obj
 *.exe
