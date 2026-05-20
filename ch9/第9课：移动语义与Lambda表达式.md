@@ -208,5 +208,24 @@ int main() {
 }
 
 ```
+```
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch9/code$ ./lambda_sort 
+--- 原始顺序 ---
+ID: 1 | Conf: 0.85
+ID: 2 | Conf: 0.99
+ID: 3 | Conf: 0.45
+ID: 4 | Conf: 0.92
+
+--- 按置信度降序排列 ---
+ID: 2 | Conf: 0.99
+ID: 4 | Conf: 0.92
+ID: 1 | Conf: 0.85
+ID: 3 | Conf: 0.45
+
+--- 过滤高置信度框 ---
+ID 2 passed.
+ID 4 passed.
+Total boxes passed threshold: 2
+```
 
 编译并运行上述代码，你将直观地感受到 Lambda 表达式在处理数据集合时的灵活性。这种写法避免了在类外定义大量的单次使用的比较函数，极大提升了代码的内聚性和可读性。
