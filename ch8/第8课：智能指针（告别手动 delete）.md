@@ -22,8 +22,9 @@
 
 这是最常用、性能最高（开销为零）的智能指针。
 
-* **语义：** **独占**它所指向的堆内存。同一时刻，只能有一个 `unique_ptr` 指向该对象。
-* **创建：** 永远推荐使用 `std::make_unique<T>()` 来创建，而不是裸写 `new`。
+- **语义：** **独占**它所指向的堆内存。同一时刻，只能有一个 `unique_ptr` 指向该对象。
+- **创建：** 永远推荐使用 `std::make_unique<T>()` 来创建，而不是裸写 `new`。
+
 ```cpp
 #include <memory>
 // p1 独占了这个 int 所在的内存
@@ -31,33 +32,36 @@ std::unique_ptr<int> p1 = std::make_unique<int>(42);
 
 ```
 
-
-* **禁止拷贝：** 你不能执行 `p2 = p1;`（编译器会直接报错），因为这违反了独占原则。
-* **转移所有权：** 如果非要移交控制权，必须使用 `std::move`（我们将在下一课深入探讨）。
+- **禁止拷贝：** 你不能执行 `p2 = p1;`（编译器会直接报错），因为这违反了独占原则。
+- **转移所有权：** 如果非要移交控制权，必须使用 `std::move`（我们将在下一课深入探讨）。
 
 ```cpp
     std::unique_ptr<int> p2 = std::move(p1); 
     // 此时 p1 变为空，p2 接管了内存的生杀大权
-    ```
+```
 
 #### 3. 共享所有权：`std::shared_ptr`（类似 Python 的内存管理）
+
 当你需要多个对象共享同一块数据（比如多个不同的网络分支读取同一张特征图）时使用。
-*   **语义：** 内部维护一个**引用计数器 (Reference Count)**。这与 Python 底层的机制（`sys.getrefcount`）几乎一模一样。
-*   **创建：** 使用 `std::make_shared<T>()`。
-*   **机制：** 每次发生拷贝（`p2 = p1`），引用计数 +1。当某个智能指针离开作用域销毁时，计数 -1。当计数降为 0 时，底层自动执行 `delete`。
-    
+
+- **语义：** 内部维护一个**引用计数器 (Reference Count)**。这与 Python 底层的机制（`sys.getrefcount`）几乎一模一样。
+- **创建：** 使用 `std::make_shared<T>()`。
+- **机制：** 每次发生拷贝（`p2 = p1`），引用计数 +1。当某个智能指针离开作用域销毁时，计数 -1。当计数降为 0 时，底层自动执行 `delete`。
+
 ```cpp
     std::shared_ptr<int> p1 = std::make_shared<int>(100); // count = 1
     {
         std::shared_ptr<int> p2 = p1; // count = 2
     } // p2 离开作用域，count 变为 1
     // p1 离开作用域，count = 0，内存释放
-    ```
-*   **代价：** 相比 `unique_ptr`，它需要在堆上额外分配一小块内存来存储控制块（包含引用计数等），且在多线程环境下修改计数需要加锁，存在微小的性能开销。
+```
+
+- **代价：** 相比 `unique_ptr`，它需要在堆上额外分配一小块内存来存储控制块（包含引用计数等），且在多线程环境下修改计数需要加锁，存在微小的性能开销。
 
 #### 4. 避免循环引用：`std::weak_ptr`
-*   **痛点：** `shared_ptr` 的致命弱点是**循环引用**。如果对象 A 包含指向对象 B 的 `shared_ptr`，同时对象 B 也包含指向 A 的 `shared_ptr`，它们的引用计数永远不会降为 0，导致内存泄漏。（Python 的垃圾回收器有额外的机制来解决循环引用，但在 C++ 中需要开发者介入）。
-*   **语义：** `weak_ptr` 就像一个“旁观者”。它可以从 `shared_ptr` 创建，但**不增加引用计数**。它只负责观察内存是否还在，如果内存已经被释放，它可以安全地告诉你。
+
+- **痛点：** `shared_ptr` 的致命弱点是**循环引用**。如果对象 A 包含指向对象 B 的 `shared_ptr`，同时对象 B 也包含指向 A 的 `shared_ptr`，它们的引用计数永远不会降为 0，导致内存泄漏。（Python 的垃圾回收器有额外的机制来解决循环引用，但在 C++ 中需要开发者介入）。
+- **语义：** `weak_ptr` 就像一个“旁观者”。它可以从 `shared_ptr` 创建，但**不增加引用计数**。它只负责观察内存是否还在，如果内存已经被释放，它可以安全地告诉你。
 
 ---
 
@@ -162,7 +166,30 @@ g++ smart_nn_engine.cpp -o smart_nn -std=c++14
 
 ```
 
-*(注：`std::make_unique` 是从 C++14 标准开始引入的，因此编译时通常加上 `-std=c++14` 或 `c++17` 标志。)*
+*(注：`std::make_unique` 是从 C++14 标准开始引入的，因此编译时通常加上 `-std=c++14`或`c++17` 标志。)*
+
+```
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch8/code$ g++ smart_nn_engine.cpp -o smart_nn -std=c++14
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch8/code$ ./smart_nn
+--- Building Model Pipeline with Smart Pointers ---
+  [LinearLayer Constructor] Allocated weights for fc1
+  [LinearLayer Constructor] Allocated weights for fc2
+
+--- Starting Forward Pass ---
+>>> Executing Linear Layer [fc1]
+>>> Executing ReLU Layer [relu1]
+>>> Executing Linear Layer [fc2]
+
+--- End of Main Scope ---
+  [LinearLayer Destructor] Freed weights for fc1
+[Layer Destructor] Destroying: fc1
+  [ReLULayer Destructor] Destroyed relu1
+[Layer Destructor] Destroying: relu1
+  [LinearLayer Destructor] Freed weights for fc2
+[Layer Destructor] Destroying: fc2
+```
+
+
 
 **重点观察现象：**
 在终端输出的最后，你会看到：
@@ -185,3 +212,4 @@ g++ smart_nn_engine.cpp -o smart_nn -std=c++14
 ```</LinearLayer></ReLULayer></LinearLayer></Layer></Layer*></T>
 
 ```
+
