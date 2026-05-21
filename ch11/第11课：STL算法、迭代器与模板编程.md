@@ -53,13 +53,15 @@ T add(T a, T b) {
 
 均值计算公式：
 
-
-$$ \mu = \frac{1}{N} \sum_{i=1}^{N} x_i $$
+$$
+\mu = \frac{1}{N} \sum_{i=1}^{N} x_i
+$$
 
 方差计算公式：
 
-
-$$ \sigma^2 = \frac{1}{N} \sum_{i=1}^{N} (x_i - \mu)^2 $$
+$$
+\sigma^2 = \frac{1}{N} \sum_{i=1}^{N} (x_i - \mu)^2
+$$
 
 **1. 编写代码 (`stats_template.cpp`)**
 
@@ -174,6 +176,21 @@ int main() {
 }
 
 ```
+```
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ g++ -O3 stats_template.cpp -o  stats_template
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ ./stats_template 
+Int Features -> Mean: 3, Variance: 2
+Float Features -> Mean: 3.5, Variance: 2
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ g++ -O3 filter_sort.cpp  -o filter_sort
+(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ ./filter_sort 
+Original size: 5
+Size after filtering: 3
+--- Final Sorted Results ---
+ID: 3 | Conf: 0.88 | Area: 1200
+ID: 5 | Conf: 0.99 | Area: 800
+ID: 1 | Conf: 0.95 | Area: 400
+```
+
 
 *预期输出提示：* 代码将首先把 `size` 从 5 缩减为 3，然后打印出 ID 分别为 3, 5, 1 的检测结果（面积递减）。在C++20中，`std::erase_if` 进一步简化了这个过程，但在工业界的 C++11/14 标准下，这种 `remove_if` + `erase` 的组合是极其核心的基本功。
 
