@@ -35,30 +35,25 @@
 
 掌握了这项技术，你在未来的模型部署中，就可以将耗时的数据预处理操作全部推入 C++ 的多线程中执行，然后再将处理好的极速张量喂给 Python 端的模型。
 
-```</Step></Sequence></T>
+#### 实验：NumPy 数组就地翻倍 Pybind11 扩展
 
-```
+**1. 准备环境**
 
-1. **准备环境:**
 在终端中，安装 pybind11。为了让 CMake 能够轻松找到它，我们直接通过 pip 安装：
 
 ```bash
-    pip install pybind11 numpy
-    ```
-  </Step>
-  <Step title="编写 C++ 绑定代码">
-    创建一个名为 `fast_ops.cpp` 的文件。我们将编写核心算法，并通过宏将其暴露给 Python。
-
-    
-
+pip install pybind11 numpy
 ```
 
-cpp
+**2. 编写 C++ 绑定代码 (`fast_ops.cpp`)**
+
+创建一个名为 `fast_ops.cpp` 的文件。我们将编写核心算法，并通过宏将其暴露给 Python。
+
+```cpp
+#include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include 
 
-```
 namespace py = pybind11;
 
 // 核心算法：接收 numpy 数组并就地将所有元素翻倍
@@ -88,20 +83,14 @@ PYBIND11_MODULE(fast_ops, m) {
 
 ```
 
-```
-  </Step>
-  <Step subtitle="将 C++ 编译为 Python 可识别的动态库" title="编写 CMake 构建脚本">
-    创建一个 `CMakeLists.txt`。Pybind11 提供了极度简化的 CMake 宏。
+**3. 编写 CMake 构建脚本 (`CMakeLists.txt`)**
 
-    
+创建一个 `CMakeLists.txt`。Pybind11 提供了极度简化的 CMake 宏。
 
-```
-
-cmake
+```cmake
 cmake_minimum_required(VERSION 3.12)
 project(FastOpsProject)
 
-```
 set(CMAKE_CXX_STANDARD 17)
 
 # 1. 查找 Python 环境
@@ -125,34 +114,27 @@ pybind11_add_module(fast_ops fast_ops.cpp)
 
 ```
 
-```
-  </Step>
-  <Step title="编译模块">
-    在终端中执行标准的外部构建流程：
-    
+**4. 编译模块**
 
-```
+在终端中执行标准的外部构建流程：
 
-bash
+```bash
 mkdir build && cd build
-cmake ..
+# 用「将来要跑 test.py 的同一个 python」配置，避免版本不一致导致 import 失败
+cmake .. -DPython3_EXECUTABLE=$(which python3.10)
 make
-
-```
-    执行完毕后，在 `build` 目录下会生成一个类似于 `fast_ops.cpython-310-x86_64-linux-gnu.so` 的文件。这就是我们的 Python 扩展模块。
-  </Step>
-  <Step title="在 Python 中调用并测试零拷贝">
-    在 `build` 目录下（确保与 `.so` 文件在同一目录），创建一个测试脚本 `test.py`。
-
-    
-
 ```
 
-python
+执行完毕后，在 `build` 目录下会生成一个类似于 `fast_ops.cpython-310-x86_64-linux-gnu.so` 的文件。文件名里的 `310` 表示针对 **Python 3.10** 编译，运行测试时也必须用同一版本。
+
+**5. 在 Python 中调用并测试零拷贝 (`test.py`)**
+
+在 `build` 目录下（确保与 `.so` 文件在同一目录），创建一个测试脚本 `test.py`。
+
+```python
 import numpy as np
 import fast_ops # 直接 import 我们的 C++ 模块！
 
-```
 # 创建一个单精度浮点数的 numpy 数组 (强制指定 float32 以匹配 C++ 端的 float)
 arr = np.array([1.5, 2.5, 3.5, 4.5], dtype=np.float32)
 
@@ -167,9 +149,31 @@ print(f"[Python] Array memory ID: {id(arr)}") # ID 完全一样，证明没有�
 
 ```
 
+在 `build` 目录下运行（**必须与编译时 Python 版本一致**）：
+
+```bash
+python3.10 test.py
 ```
-    运行 `python3 test.py`，你将看到 C++ 的日志成功打印，并且 Python 端的 Numpy 数组已经被瞬间修改。
-  </Step>
-</Sequence><FollowUp label="准备好迎接最后的结业挑战了吗？" query="第14课：综合项目——简易推理引擎设计 请提供详细内容。"/>
 
 ```
+(sam3) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch13/code/build$ cmake .. -DPython3_EXECUTABLE=$(which python3.10)
+/usr/bin/python3.10: No module named pybind11
+-- Found pybind11: /usr/include (found version "2.9.1")
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/ubuntu/stephen/01-code/cpp4ai/ch13/code/build
+(sam3) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch13/code/build$ make
+Consolidate compiler generated dependencies of target fast_ops
+[100%] Built target fast_ops
+(sam3) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch13/code/build$ python3.10 test.py 
+[Python] Original array: [1.5 2.5 3.5 4.5]
+[Python] Array memory ID: 125950138213712
+[C++] Received array of size: 4
+[Python] Modified array: [3. 5. 7. 9.]
+[Python] Array memory ID: 125950138213712
+(sam3) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch13/code/build$ 
+```
+
+若使用 `python test.py` 报 `ModuleNotFoundError: No module named 'fast_ops'`，多半是 conda 环境（如 Python 3.13）与 `.so` 后缀（如 `cpython-310`）不一致。可先执行 `ls fast_ops*.so` 对照后缀，或改用 `python3.10`；若坚持用当前环境的 Python，需在该环境中安装开发头文件后重新 `cmake .. -DPython3_EXECUTABLE=$(which python)` 再 `make`。
+
+成功时你将看到 C++ 的日志成功打印，并且 Python 端的 Numpy 数组已经被瞬间修改。

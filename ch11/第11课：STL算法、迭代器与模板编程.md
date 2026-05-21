@@ -10,27 +10,26 @@
 
 在C++的设计哲学中，**数据容器（如 `vector`, `map`）和操作逻辑（如排序、查找）是严格解耦的**。那么，排序算法怎么知道它面对的是一个连续内存的数组，还是一个树形结构的字典呢？答案就是迭代器。
 
-* **本质：** 迭代器是**指针的泛化**。它重载了 `++`（移到下一个元素）、`*`（解引用获取数据）等运算符。
-* **半开区间 `[begin, end)`：** 所有的STL算法接收的都是一个左闭右开的范围。
-* `vec.begin()`：指向第一个元素。
-* `vec.end()`：指向**最后一个元素的下一个位置**（越界位置）。这种设计极其巧妙，当 `begin == end` 时，就代表容器为空。
-
-
+- **本质：** 迭代器是**指针的泛化**。它重载了 `++`（移到下一个元素）、`*`（解引用获取数据）等运算符。
+- **半开区间 `[begin, end)`：** 所有的STL算法接收的都是一个左闭右开的范围。
+- `vec.begin()`：指向第一个元素。
+- `vec.end()`：指向**最后一个元素的下一个位置**（越界位置）。这种设计极其巧妙，当 `begin == end` 时，就代表容器为空。
 
 #### 2. 常用STL算法 (`<algorithm>` 与 `<numeric>`)
 
 C++标准库提供了上百个高度优化的通用算法，它们都可以接收任何容器的迭代器。
 
-* **`std::sort`:** 使用Introsort（内省排序：快排 + 堆排 + 插入排序的混合体），平均时间复杂度 O(N log N)。
-* **`std::transform`:** 完美对应Python的 `map()`。将一个函数（或Lambda）应用到区间内的每一个元素，并将结果写入目标位置。
-* **`std::accumulate` (包含在 `<numeric>` 中):** 对应Python的 `sum()` 或 `functools.reduce()`。用于对区间内的元素进行累加（或自定义的累积操作）。
+- `**std::sort`:** 使用Introsort（内省排序：快排 + 堆排 + 插入排序的混合体），平均时间复杂度 O(N log N)。
+- `**std::transform`:** 完美对应Python的 `map()`。将一个函数（或Lambda）应用到区间内的每一个元素，并将结果写入目标位置。
+- `**std::accumulate` (包含在 `<numeric>` 中):** 对应Python的 `sum()` 或 `functools.reduce()`。用于对区间内的元素进行累加（或自定义的累积操作）。
 
 #### 3. 泛型编程基础：模板 (Templates)
 
 Python是动态类型语言，你可以写 `def add(a, b): return a + b`，传入整数或浮点数都能运行。而在C++中，类型是静态绑定的，为了实现类似的功能，我们需要使用**模板**。
 
-* **核心理念：** 告诉编译器一种“代码生成规则”，当编译器遇到具体的类型（如 `int` 或 `float`）时，**自动为你生成**对应类型的实体代码（这被称为模板的实例化）。
-* **函数模板：**
+- **核心理念：** 告诉编译器一种“代码生成规则”，当编译器遇到具体的类型（如 `int` 或 `float`）时，**自动为你生成**对应类型的实体代码（这被称为模板的实例化）。
+- **函数模板：**
+
 ```cpp
 template <typename T>
 T add(T a, T b) {
@@ -39,9 +38,9 @@ T add(T a, T b) {
 
 ```
 
-
 当调用 `add(1.0f, 2.0f)` 时，编译器会在底层偷偷生成一份接收 `float` 的函数代码。
-* **类模板：** 我们一直在用的 `std::vector<int>` 就是一个类模板，尖括号里的 `int` 就是传给模板的类型参数。
+
+- **类模板：** 我们一直在用的 `std::vector<int>` 就是一个类模板，尖括号里的 `int` 就是传给模板的类型参数。
 
 ---
 
@@ -53,15 +52,11 @@ T add(T a, T b) {
 
 均值计算公式：
 
-$$
-\mu = \frac{1}{N} \sum_{i=1}^{N} x_i
-$$
+$$ \mu = \frac{1}{N} \sum_{i=1}^{N} x_i $$
 
 方差计算公式：
 
-$$
-\sigma^2 = \frac{1}{N} \sum_{i=1}^{N} (x_i - \mu)^2
-$$
+$$ \sigma^2 = \frac{1}{N} \sum_{i=1}^{N} (x_i - \mu)^2 $$
 
 **1. 编写代码 (`stats_template.cpp`)**
 
@@ -176,24 +171,10 @@ int main() {
 }
 
 ```
-```
-(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ g++ -O3 stats_template.cpp -o  stats_template
-(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ ./stats_template 
-Int Features -> Mean: 3, Variance: 2
-Float Features -> Mean: 3.5, Variance: 2
-(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ g++ -O3 filter_sort.cpp  -o filter_sort
-(base) ubuntu@ubuntu-System-Product-Name:~/stephen/01-code/cpp4ai/ch11/code$ ./filter_sort 
-Original size: 5
-Size after filtering: 3
---- Final Sorted Results ---
-ID: 3 | Conf: 0.88 | Area: 1200
-ID: 5 | Conf: 0.99 | Area: 800
-ID: 1 | Conf: 0.95 | Area: 400
-```
-
 
 *预期输出提示：* 代码将首先把 `size` 从 5 缩减为 3，然后打印出 ID 分别为 3, 5, 1 的检测结果（面积递减）。在C++20中，`std::erase_if` 进一步简化了这个过程，但在工业界的 C++11/14 标准下，这种 `remove_if` + `erase` 的组合是极其核心的基本功。
 
 ```</DetectionResult></T>
 
 ```
+
